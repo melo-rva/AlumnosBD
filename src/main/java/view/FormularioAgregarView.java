@@ -3,7 +3,7 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 
-public class FormularioAgregar extends JDialog {
+public class FormularioAgregarView extends JDialog {
     public JTextField txtNumeroControl = new JTextField(10);
     public JTextField txtNombre = new JTextField(20);
     public JTextField txtMateria = new JTextField(20);
@@ -14,7 +14,7 @@ public class FormularioAgregar extends JDialog {
     public JButton btnCancelar = new JButton("Cancelar");
     public JButton btnLimpiar = new JButton("Limpiar");
 
-    public FormularioAgregar(JFrame parent) {
+    public FormularioAgregarView(JFrame parent) {
         super(parent, "Agregar", true); // true = modal
         setSize(400, 350);
         setLocationRelativeTo(parent);

@@ -1,28 +1,25 @@
 package org.example;
 
 import Controller.AlumnoController;
-import Controller.FormularioController;
-import model.AlumnoRepositorioArreglo;
+import model.AlumnoDAO;
 import view.AlumnoView;
-import view.FormularioAgregar;
 
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Ventana principal
-            JFrame frame = new JFrame("Registro de alumnos");
-            frame.setSize(300,200);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setVisible(true);
+            // Crear la vista principal
+            AlumnoView view = new AlumnoView();
 
-            FormularioAgregar formulario = new FormularioAgregar(frame);
-            new FormularioController(formulario);
-            formulario.setVisible(true);
+            // Crear el DAO (con conexión a la base de datos)
+            AlumnoDAO dao = new AlumnoDAO();
+
+            // Conectar el controlador con la vista y el DAO
+            AlumnoController controller = new AlumnoController(dao, view);
+
+            // Mostrar la ventana
+            view.setVisible(true);
         });
-
-
-
     }
 }
