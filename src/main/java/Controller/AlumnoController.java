@@ -1,0 +1,194 @@
+package Controller;
+
+import model.Alumno;
+import model.AlumnoDAO;
+import view.FormularioAgregar;
+import model.AlumnoRepositorioArreglo;
+import view.AlumnoTableModel;
+import view.AlumnoView;
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+
+public class AlumnoController {
+    private final AlumnoRepositorioArreglo repo;
+    private final AlumnoView view;
+
+    public AlumnoController(AlumnoRepositorioArreglo repo, AlumnoView view) {
+        this.repo = repo;
+        this.view = view;
+
+        // Inicializar tabla
+        view.tableModel = new AlumnoTableModel(repo.findAll());
+        view.tabla.setModel(view.tableModel);
+
+        //se centran las columnas de la tabla
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        for (int i = 0; i < view.tabla.getColumnCount(); i++) {
+            view.tabla.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        registrarEventos();
+        refrescarTabla();
+    }
+
+    private void eliminarSeleccionado() {
+        int fila = view.tabla.getSelectedRow();
+        if (fila >= 0) {
+            Alumno seleccionado = view.tableModel.getAt(fila);
+
+            int opcion = JOptionPane.showConfirmDialog(view,
+                    "¿Eliminar el alumno con nombre: " + seleccionado.getNombre() + "?",
+                    "Confirmar", JOptionPane.YES_NO_OPTION);
+
+            if (opcion == JOptionPane.YES_OPTION) {
+                repo.deleteByClave(seleccionado.getNumeroControl());
+                refrescarTabla();
+                JOptionPane.showMessageDialog(view, "Alumno eliminado correctamente");
+            }
+        } else {
+            JOptionPane.showMessageDialog(view, "Seleccione un alumno primero");
+        }
+    }
+
+    private void registrarEventos() {
+
+        //Modificar
+        view.act_modificar.addActionListener(e -> modificarSeleccionado());
+        // Limpiar
+        view.btnLimpiar.addActionListener(e -> view.limpiarFormulario());
+
+        view.act_eliminar.addActionListener(e -> eliminarSeleccionado());
+        // Formulario
+        view.act_agregar.addActionListener(e -> {
+            // Crea la ventana del formulario para agregar
+            FormularioAgregar form = new FormularioAgregar(view);
+
+            // Botón agregar dentro del formulario
+            form.btnAgregar.addActionListener(ev -> {
+                try {
+                    int numeroControl = Integer.parseInt(form.txtNumeroControl.getText().trim());
+                    String nombre = form.txtNombre.getText().trim();
+                    String materia = form.txtMateria.getText().trim();
+                    Double calificacion = Double.parseDouble(form.txtCalificacion.getText().trim());
+                    String especialidad = form.txtEspecialidad.getText().trim();
+
+                    // 1. Validar datos
+                    validar(numeroControl, nombre, materia, calificacion);
+
+                    // 2. Crear objeto alumno
+                    Alumno producto = new Alumno(numeroControl, nombre, materia, calificacion, especialidad);
+
+                    // 3. Guardar en el repositorio
+                    repo.create(producto);
+
+                    // 4. Refrescar la tabla de la vista principal
+                    refrescarTabla();
+
+                    // 5. Confirmar y cerrar el formulario
+                    JOptionPane.showMessageDialog(view, "Alumno agregado correctamente");
+                    form.dispose();
+
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(form, "Datos invalidos", "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(form, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+            // Botón cancelar solo cierra el formulario
+            form.btnCancelar.addActionListener(ev -> form.dispose());
+
+            // Mostrar el formulario
+            form.setVisible(true);
+        });
+    }
+
+
+
+    private void modificarSeleccionado() {
+        int fila = view.tabla.getSelectedRow();
+
+        if (fila >= 0) {
+            Alumno seleccionado = view.tableModel.getAt(fila);
+
+            // Crear un formulario igual que para agregar, pero con los datos cargados
+            FormularioAgregar form = new FormularioAgregar(view);
+
+            // Llenar campos con los datos del producto seleccionado
+            form.txtNumeroControl.setText(String.valueOf(seleccionado.getNumeroControl()));
+            form.txtNumeroControl.setEditable(false); // normalmente no se cambia la clave
+            form.txtNombre.setText(seleccionado.getNombre());
+            form.txtMateria.setText(seleccionado.getMateria());
+            form.txtCalificacion.setText(String.valueOf(seleccionado.getCalificacion()));
+            form.txtEspecialidad.setText(seleccionado.getEspecialidad());
+
+            // Botón agregar ahora funciona como "guardar cambios"
+            form.btnAgregar.setText("Guardar cambios");
+            form.btnAgregar.addActionListener(ev -> {
+                try {
+                    String nombre = form.txtNombre.getText().trim();
+                    String materia = form.txtMateria.getText().trim();
+                    Double calificacion = Double.parseDouble(form.txtCalificacion.getText().trim());
+                    String especialidad = form.txtEspecialidad.getText().trim();
+
+                    // Validar datos
+                    validar(seleccionado.getNumeroControl(), nombre, materia, calificacion);
+
+                    // Actualizar objeto
+                    seleccionado.setNombre(nombre);
+                    seleccionado.setMateria(materia);
+                    seleccionado.setCalificacion(calificacion);
+                    seleccionado.setEspecialidad(especialidad);
+
+                    // Refrescar tabla
+                    refrescarTabla();
+
+                    JOptionPane.showMessageDialog(view, "Alumno modificado correctamente");
+                    form.dispose();
+
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(form, "Número inválido en los campos", "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(form, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+            // Botón cancelar
+            form.btnCancelar.addActionListener(ev -> form.dispose());
+
+            form.setVisible(true);
+
+        } else {
+            JOptionPane.showMessageDialog(view, "Seleccione un alumno primero");
+        }
+    }
+
+    private void refrescarTabla() {
+        view.tableModel.setData(repo.findAll());
+    }
+
+    private void validar(int numeroControl, String nombre, String materia, Double calificacion) {
+        if (numeroControl <= 0)
+            throw new IllegalArgumentException("El numero de control es requerido.");
+        if (nombre.isBlank()) throw new IllegalArgumentException("El nombre es requerido.");
+        if (materia.isBlank()) throw new IllegalArgumentException("La materia es requerida.");
+        if (calificacion < 0) throw new IllegalArgumentException("La calificacion no puede ser negativa.");
+    }
+
+    private void mostrarError(String msg) {
+        JOptionPane.showMessageDialog(view, msg, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private AlumnoDAO dao = new AlumnoDAO();
+    public void agregarAlumno(int numero_control,String nombre, String materia, double calificacion, String especialidad) {
+        Alumno alumno = new Alumno(numero_control,nombre, materia, calificacion, especialidad);
+        boolean exito = dao.insertar(alumno);
+        if (exito) {
+            System.out.println("Alumno agregado correctamente");
+        } else {
+            System.out.println(" Error al agregar alumno");
+        }
+    }
+
+}
