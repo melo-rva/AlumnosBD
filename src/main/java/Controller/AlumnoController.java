@@ -2,6 +2,7 @@ package Controller;
 
 import model.Alumno;
 import model.AlumnoDAO;
+import model.AppModel;
 import view.FormularioAgregarView;
 import view.AlumnoTableModel;
 import view.AlumnoView;
@@ -9,10 +10,15 @@ import view.AlumnoView;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class AlumnoController {
     private final AlumnoDAO dao;
     private final AlumnoView view;
+
+    private static final Logger LOG = Logger.getLogger(AlumnoController.class.getName());
+
+
 
     public AlumnoController(AlumnoDAO dao, AlumnoView view) {
         this.dao = dao;

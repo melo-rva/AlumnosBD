@@ -6,10 +6,12 @@ import java.util.List;
 
 public class AlumnoDAO {
 
-    // Obtener todos los alumnos Si quieres
+    // Obtener todos los alumnos si quieres
     public List<Alumno> listar() {
         List<Alumno> alumnos = new ArrayList<>();
-        String sql = "SELECT * FROM alumnos"; // Unificado nombre de tabla
+        String sql = "SELECT * FROM alumnos";
+
+
 
         try (Connection conn = BaseDatos.getConnection();
              Statement stmt = conn.createStatement();
