@@ -2,7 +2,7 @@ package Controller;
 
 import model.Alumno;
 import model.AlumnoDAO;
-import model.AppModel;
+
 import view.FormularioAgregarView;
 import view.AlumnoTableModel;
 import view.AlumnoView;

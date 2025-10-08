@@ -1,64 +1,43 @@
 package Controller;
 
-import model.AppModel;
-import model.AuthService;
-import model.User;
-import view.LoginDialog;
+import model.AlumnoDAO;
+import model.UserDAO;
 import view.AlumnoView;
-
-import javax.swing.*;
-import java.util.Optional;
-import java.util.logging.Logger;
+import view.LoginDialog;
 
 public class LoginController {
-    private static final Logger LOG = Logger.getLogger(LoginController.class.getName());
+    private LoginDialog vista;
+    private UserDAO dao;
 
-    private final AppModel model;
-    private final AuthService auth;
-    private final LoginDialog dialog;
-    private final AlumnoView mainView;
+    public LoginController(LoginDialog vista) {
+        this.vista = vista;
+        this.dao = new UserDAO();
 
-    public LoginController(AppModel model, AuthService auth, LoginDialog dialog, AlumnoView mainView) {
-        this.model = model;
-        this.auth = auth;
-        this.dialog = dialog;
-        this.mainView = mainView;
-        wireEvents();
+        // Escucha del botón de login
+        this.vista.getBtnLogin().addActionListener(e -> validarLogin());
     }
 
-    private void wireEvents() {
-        dialog.getBtnOk().addActionListener(e -> onLogin());
-        dialog.getBtnCancel().addActionListener(e -> onCancel());
-    }
+    private void validarLogin() {
+        String user = vista.getTxtUsuario().getText();
+        String pass = new String(vista.getTxtPassword().getPassword());
 
-    public boolean showLogin() {
+        if (dao.validarUsuario(user, pass)) {
+            vista.mostrarMensaje("Inicio de sesión exitoso ");
+            // Aquí podrías abrir la ventana principal, por ejemplo:
+            // new MenuPrincipalView().setVisible(true);
+            AlumnoView view = new AlumnoView();
 
-        dialog.clear();
-        dialog.setVisible(true);
-        return model.isLoggedIn();
-    }
+            // Crear el DAO (con conexión a la base de datos)
+            AlumnoDAO dao = new AlumnoDAO();
 
-    private void onLogin() {
-        String u = dialog.getUsername();
-        String p = dialog.getPassword();
-        Optional<User> user = auth.login(u, p);
-        if (user.isPresent()) {
-            model.setUsuarioActual(user.get().getUsername());
-            model.setRolActual(user.get().getRole());
-            LOG.info("Login OK: " + model.getUsuarioActual() + " (" + model.getRolActual() + ")");
-            dialog.setVisible(false);
+            // Conectar el controlador con la vista y el DAO
+            AlumnoController controller = new AlumnoController(dao, view);
 
+            // Mostrar la ventana
+            view.setVisible(true);
+            // vista.dispose();
         } else {
-            LOG.warning("Login FALLÓ para usuario: " + u);
-            JOptionPane.showMessageDialog(dialog, "Usuario o contraseña incorrectos", "Error", JOptionPane.ERROR_MESSAGE);
+            vista.mostrarMensaje("Usuario o contraseña incorrectos ");
         }
-    }
-
-    private void onCancel() {
-        LOG.info("Login cancelado");
-        dialog.setVisible(false);
-        // Opcional: cerrar app si se cancela
-        int opt = JOptionPane.showConfirmDialog(mainView, "¿Deseas salir?", "Cancelar login", JOptionPane.YES_NO_OPTION);
-        if (opt == JOptionPane.YES_OPTION) System.exit(0);
     }
 }
