@@ -5,6 +5,8 @@ import model.UserDAO;
 import view.AlumnoView;
 import view.LoginDialog;
 
+import javax.swing.*;
+
 public class LoginController {
     private LoginDialog vista;
     private UserDAO dao;
@@ -35,7 +37,7 @@ public class LoginController {
 
             // Mostrar la ventana
             view.setVisible(true);
-            // vista.dispose();
+            vista.dispose();
         } else {
             vista.mostrarMensaje("Usuario o contraseña incorrectos ");
         }
